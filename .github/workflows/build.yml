@@ -1,0 +1,37 @@
+name: Build and verify Secure DataCtrlLink
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download LLVM-MinGW
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/mstorsjo/llvm-mingw/releases/download/20260616/llvm-mingw-20260616-ucrt-x86_64.zip'
+          Invoke-WebRequest $url -OutFile "$env:RUNNER_TEMP\llvm-mingw.zip"
+          Expand-Archive "$env:RUNNER_TEMP\llvm-mingw.zip" "$env:RUNNER_TEMP\llvm-mingw"
+          $root = (Get-ChildItem "$env:RUNNER_TEMP\llvm-mingw" -Directory | Select-Object -First 1).FullName
+          "LLVM_MINGW_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Build
+        shell: pwsh
+        run: .\build.ps1
+      - name: Run data-free tests
+        shell: pwsh
+        run: |
+          .\build\status_message_tests.exe
+          .\build\proxy_smoke.exe .\build\dinput8.dll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Secure-DataCtrlLink-WWE2K26-Windows-x64
+          path: build/dinput8.dll
+
