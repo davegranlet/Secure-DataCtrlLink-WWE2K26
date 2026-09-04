@@ -29,8 +29,15 @@ jobs:
         shell: pwsh
         run: |
           .\build\status_message_tests.exe
+          .\build\mod_manifest_tests.exe
+          .\build\runtime_config_tests.exe
           .\build\proxy_smoke.exe .\build\dinput8.dll
+      - name: Package verified artifact with provenance documents
+        shell: pwsh
+        run: .\scripts\package-release.ps1 -Version "ci-$env:GITHUB_RUN_NUMBER"
       - uses: actions/upload-artifact@v7
         with:
           name: Secure-DataCtrlLink-WWE2K26-Windows-x64
-          path: build/dinput8.dll
+          path: |
+            release/*.zip
+            release/*.zip.sha256.txt

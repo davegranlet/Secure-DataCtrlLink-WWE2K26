@@ -1,6 +1,15 @@
 # Testing and release evidence
 
-The public repository contains source-level tests but deliberately contains no proprietary game fixtures. Tests that inspect real WWE archives or Wwise packages require files supplied from the tester’s own installation.
+> **Readability note:** I ran this document through an “explain like I am five”
+> chatbot to improve readability, explainability, and usability. The chatbot
+> helped present the material; it did not originate DataCtrlLink, its
+> functionality, or the underlying development work.
+
+The public repository contains test source but deliberately contains no
+proprietary game fixtures. The test source is compiled before use, and the
+checks run against compiled test programs and the compiled addon. Tests that
+inspect real WWE archives or Wwise packages require files supplied from the
+tester’s own installation.
 
 ## Build all targets
 
@@ -8,16 +17,21 @@ The public repository contains source-level tests but deliberately contains no p
 & .\build.ps1
 ```
 
-The build uses warnings-as-errors and produces the addon plus four test executables beneath `build`.
+The build uses warnings-as-errors and produces the addon plus six test executables beneath `build`.
 
 ## Tests that require no game data
 
 ```powershell
 & .\build\status_message_tests.exe
+& .\build\mod_manifest_tests.exe
+& .\build\runtime_config_tests.exe
 & .\build\proxy_smoke.exe .\build\dinput8.dll
 ```
 
-These verify notification wording, all six proxy exports, and absolute forwarding to the System32 DirectInput implementation. The smoke host is not WWE 2K26, so the addon's version gate prevents any game-internal behavior.
+These verify notification wording, bounded manifest and configuration parsing,
+all six proxy exports, and absolute forwarding to the System32 DirectInput
+implementation. The smoke host is not WWE 2K26, so the addon's version gate
+prevents any game-internal behavior.
 
 ## Custom-music reconstruction test
 
@@ -54,4 +68,3 @@ A successful mount return alone is insufficient. It proves the native function a
 - Internal game ABIs are verified only for the exact allowlisted executable.
 - Audio content and game asset semantics require manual in-game observation.
 - Conflicts and priority between multiple valid mods cannot be proven by structural validation.
-

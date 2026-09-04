@@ -7,21 +7,28 @@
 #include <vector>
 
 namespace {
-void require_rejected(const std::filesystem::path& path, const char* message) {
-    music_only::CakInfo info; std::string error;
-    if (music_only::validate_cak(path, info, error)) throw std::runtime_error(message);
+void require_rejected(const std::filesystem::path &path, const char *message) {
+    secure_dcl::CakInfo info;
+    std::string error;
+    if (secure_dcl::validate_cak(path, info, error))
+        throw std::runtime_error(message);
 }
-}  // namespace
+} // namespace
 
-int wmain(int argc, wchar_t** argv) try {
-    if (argc < 2) { std::cerr << "usage: cak_validator_tests <archive.cak>...\n"; return 2; }
+int wmain(int argc, wchar_t **argv) try {
+    if (argc < 2) {
+        std::cerr << "usage: cak_validator_tests <archive.cak>...\n";
+        return 2;
+    }
     for (int i = 1; i < argc; ++i) {
-        music_only::CakInfo info; std::string error;
-        if (!music_only::validate_cak(argv[i], info, error)) {
-            std::cerr << "FAIL: " << error << '\n'; return 1;
+        secure_dcl::CakInfo info;
+        std::string error;
+        if (!secure_dcl::validate_cak(argv[i], info, error)) {
+            std::cerr << "FAIL: " << error << '\n';
+            return 1;
         }
-        std::wcout << L"PASS: " << argv[i] << L" files=" << info.file_count
-                   << L" folders=" << info.folder_count << L"\n";
+        std::wcout << L"PASS: " << argv[i] << L" files=" << info.file_count << L" folders="
+                   << info.folder_count << L"\n";
     }
 
     const auto temp_root = std::filesystem::temp_directory_path();
@@ -29,7 +36,8 @@ int wmain(int argc, wchar_t** argv) try {
     const auto corrupt = temp_root / L"secure-dcl-corrupt.cak";
     {
         std::ofstream output(truncated, std::ios::binary | std::ios::trunc);
-        constexpr std::array<char, 8> prefix{'F','D','I','R',0x09,0x09,0x00,static_cast<char>(0x81)};
+        constexpr std::array<char, 8> prefix{'F',  'D',  'I',  'R',
+                                             0x09, 0x09, 0x00, static_cast<char>(0x81)};
         output.write(prefix.data(), prefix.size());
     }
     {
@@ -48,7 +56,7 @@ int wmain(int argc, wchar_t** argv) try {
     std::filesystem::remove(corrupt, ignored);
     std::cout << "PASS: truncated and corrupt CAK rejection\n";
     return 0;
-} catch (const std::exception& error) {
+} catch (const std::exception &error) {
     std::cerr << "FAIL: " << error.what() << '\n';
     return 1;
 }
