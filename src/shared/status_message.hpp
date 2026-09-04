@@ -11,6 +11,6 @@ struct CakMountSummary {
     std::size_t failed{};
 };
 
-std::wstring cak_status_message(const CakMountSummary& summary);
+std::wstring cak_status_message(const CakMountSummary &summary);
 
-}  // namespace secure_dcl
+} // namespace secure_dcl

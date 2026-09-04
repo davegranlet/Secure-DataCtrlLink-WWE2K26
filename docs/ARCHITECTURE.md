@@ -1,5 +1,10 @@
 # Architecture and important code map
 
+> **Readability note:** I ran this document through an “explain like I am five”
+> chatbot to improve readability, explainability, and usability. The chatbot
+> helped present the material; it did not originate DataCtrlLink, its
+> functionality, or the underlying development work.
+
 This is the shortest route through the source for reviewers and maintainers.
 
 ## Runtime flow
@@ -55,6 +60,18 @@ Every chunk, record, count, and offset is checked before use. The output is capp
 
 Pure formatting logic for accepted/rejected/failed CAK counts. Keeping it separate makes the user-visible singular/plural and warning behavior unit-testable.
 
+### `src/mod_manifest.cpp`
+
+Parses the optional, bounded `mods/manifest.json` allowlist. It rejects unknown
+fields, duplicate names, path traversal, unsupported extensions, and excessive
+entry counts while preserving the developer-selected mount order.
+
+### `src/runtime_config.cpp`
+
+Parses the optional `DataCtrlLink.ini`. Only five documented numeric settings
+are accepted, each within a fixed range. Invalid or unknown settings restore
+the complete safe default configuration.
+
 ### `exports.def`
 
 Fixes the names and ordinals of the six DirectInput proxy exports expected by the host.
@@ -74,4 +91,3 @@ Unsupported or ambiguous state must disable the mod feature and write a useful l
 ## Updating for a new WWE 2K26 build
 
 Reconfirm the complete executable hash, Wwise exports and ABIs, CAK mount RVA/ABI, archive-phase RVA and signatures, native timing, malformed-input rejection, and visible/audible in-game results. Changing only `kExpectedExeSha256` is unsafe and is not an acceptable compatibility update.
-

@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-namespace music_only {
+namespace secure_dcl {
 
 struct CakInfo {
     std::uint32_t file_count{};
@@ -12,6 +12,6 @@ struct CakInfo {
     std::uint32_t key{};
 };
 
-bool validate_cak(const std::filesystem::path& path, CakInfo& info, std::string& error);
+bool validate_cak(const std::filesystem::path &path, CakInfo &info, std::string &error);
 
-}  // namespace music_only
+} // namespace secure_dcl

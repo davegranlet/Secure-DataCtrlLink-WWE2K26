@@ -1,5 +1,11 @@
 # Explain Like I’m Five: how Secure DataCtrlLink works
 
+> **Readability note:** I ran this document through an “explain like I am five”
+> chatbot to improve readability, explainability, and usability. The chatbot
+> helped present the material; it did not originate DataCtrlLink, its
+> functionality, or the underlying development work. DataCtrlLink was already
+> working in-game before I asked AI to help audit and secure my own code.
+
 Imagine WWE 2K26 is a big library.
 
 The game’s pictures, models, settings, and other files are stored in large books called **CAK archives**. A mod CAK is a small extra book containing replacement pages.
@@ -76,4 +82,3 @@ It does not mean every file inside them is correct. You must still inspect the i
 ## The whole thing in one sentence
 
 Secure DataCtrlLink safely passes controller calls to Windows, checks that it is inside the one game build it understands, validates mod data, and asks the game’s own systems to mount CAKs and register custom music—without opening a door for arbitrary native plugins.
-

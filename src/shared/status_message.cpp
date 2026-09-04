@@ -4,7 +4,7 @@
 
 namespace secure_dcl {
 
-std::wstring cak_status_message(const CakMountSummary& summary) {
+std::wstring cak_status_message(const CakMountSummary &summary) {
     std::wostringstream text;
     text << L"Registered " << summary.accepted << L" CAK "
          << (summary.accepted == 1 ? L"archive" : L"archives") << L'.'
@@ -14,11 +14,11 @@ std::wstring cak_status_message(const CakMountSummary& summary) {
              << (summary.rejected == 1 ? L"archive" : L"archives") << L'.';
     }
     if (summary.failed) {
-        text << L"\n" << summary.failed << L" validated "
-             << (summary.failed == 1 ? L"archive failed" : L"archives failed")
-             << L" to mount.";
+        text << L"\n"
+             << summary.failed << L" validated "
+             << (summary.failed == 1 ? L"archive failed" : L"archives failed") << L" to mount.";
     }
     return text.str();
 }
 
-}  // namespace secure_dcl
+} // namespace secure_dcl
