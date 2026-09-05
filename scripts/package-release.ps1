@@ -56,7 +56,7 @@ if (-not $NormalizedFaq.Contains($RequiredStatement)) {
 $ReleaseRoot = if (-not [string]::IsNullOrWhiteSpace($OutputRoot)) {
     [IO.Path]::GetFullPath($OutputRoot)
 } else {
-    Join-Path (Join-Path (Split-Path -Parent $ProjectRoot) 'forge2\sdcl-release') ''
+    Join-Path $ProjectRoot 'release'
 }
 $null = New-Item -ItemType Directory -Path $ReleaseRoot -Force
 $Stage = Join-Path $ReleaseRoot "Secure-DataCtrlLink-WWE2K26-$Version"
@@ -69,21 +69,8 @@ if (Test-Path -LiteralPath $Zip) {
 }
 New-Item -ItemType Directory -Path $Stage -Force | Out-Null
 
-$BuildRoot = Split-Path -Parent $DllPath
-$PluginSourceDir = Join-Path $BuildRoot 'plugins'
-$RequiredPlugins = @('mod_loader.ftrib', 'music_loader.ftrib', 'mygm_mod.ftrib')
-foreach ($Plugin in $RequiredPlugins) {
-    $Path = Join-Path $PluginSourceDir $Plugin
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw "Required plugin is missing. Build the plugins first: $Path"
-    }
-}
-
 Copy-Item -LiteralPath $DllPath -Destination (Join-Path $Stage 'dinput8.dll')
 New-Item -ItemType Directory -Path (Join-Path $Stage 'plugins') -Force | Out-Null
-foreach ($Plugin in $RequiredPlugins) {
-    Copy-Item -LiteralPath (Join-Path $PluginSourceDir $Plugin) -Destination (Join-Path (Join-Path $Stage 'plugins') $Plugin)
-}
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'README.md') -Destination $Stage
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'LICENSE') -Destination $Stage
 Copy-Item -LiteralPath (Join-Path $ProjectRoot 'SECURITY.md') -Destination $Stage
@@ -92,15 +79,11 @@ Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\EXPLAIN-LIKE-IM-FIVE.md') -
 Copy-Item -LiteralPath $ProvenanceFaq -Destination $Stage
 Copy-Item -LiteralPath $Methodology -Destination $Stage
 Copy-Item -LiteralPath $ReleaseTemplate -Destination $Stage
+Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\ADDON-MANAGEMENT.md') -Destination $Stage
+Copy-Item -LiteralPath (Join-Path $ProjectRoot 'docs\BUGS-AND-FIXES-1.7.7.md') -Destination $Stage
 
-$ChecksumLines = @()
 $DllHash = (Get-FileHash -Algorithm SHA256 (Join-Path $Stage 'dinput8.dll')).Hash
-$ChecksumLines += "$DllHash  dinput8.dll"
-foreach ($Plugin in $RequiredPlugins) {
-    $Hash = (Get-FileHash -Algorithm SHA256 (Join-Path (Join-Path $Stage 'plugins') $Plugin)).Hash
-    $ChecksumLines += "$Hash  plugins/$Plugin"
-}
-Set-Content -LiteralPath (Join-Path $Stage 'SHA256SUMS.txt') -Encoding ascii -Value ($ChecksumLines -join "`n")
+Set-Content -LiteralPath (Join-Path $Stage 'SHA256SUMS.txt') -Encoding ascii -Value "$DllHash  dinput8.dll"
 Compress-Archive -LiteralPath $Stage -DestinationPath $Zip -CompressionLevel Optimal
 $ZipHash = (Get-FileHash -Algorithm SHA256 $Zip).Hash
 Set-Content -LiteralPath "$Zip.sha256.txt" -Encoding ascii -Value "$ZipHash  $([IO.Path]::GetFileName($Zip))"
