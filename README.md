@@ -1,17 +1,18 @@
+**Readability note:** I ran this document through an “explain like I am five” chatbot to improve readability, explainability, and usability. The chatbot helped present the material; it did not originate Aurora Forge, DataCtrlLink, their functionality, or the underlying development work.
+
 # Secure DataCtrlLink for WWE 2K26
 
-> **Readability note:** I ran this document through an “explain like I am five”
-> chatbot to improve readability, explainability, and usability. The chatbot
-> helped present the material; it did not originate DataCtrlLink, its
-> functionality, or the underlying development work.
+Secure DataCtrlLink is the shared, fail-closed Windows loader for specifically supported WWE 2K26 builds. Features are supplied by separately named addons rather than being built into the loader.
 
-Secure DataCtrlLink is a small, open-source Windows addon that gives a specifically supported WWE 2K26 build two modding features:
+Current approved addons are:
 
-1. mount validated `.cak` archives from the game’s `mods` folder;
-2. register validated `sound/Custom*.pck` packages and load the reconstructed custom-music event bank.
+1. `AuroraForge.CAKModLoader.ftrib` — validates and mounts ordered `.cak` mods;
+2. `AuroraForge.CustomMusicLoader.ftrib` — registers validated custom packages and rebuilds the custom-music event bank;
+3. `AuroraForge.Example.MyGMStartingCash50M.ftrib` — clearly labeled example mod.
 
-It deliberately does **not** load `.asi` or `.dlp` addons and does not auto-load arbitrary DLLs.
-It loads only `.ftrib` modules placed in `<game>/plugins`.
+See [addon management](docs/ADDON-MANAGEMENT.md) for installation, enable/disable, ordering, and security behavior.
+
+It deliberately does **not** load `.asi`, `.dlp`, arbitrary DLLs, or arbitrary `.ftrib` files. A native addon runs only when its exact filename and reproducible SHA-256 appear in the loader's compiled registry.
 
 > New to all of this? Read **[Explain Like I’m Five](docs/EXPLAIN-LIKE-IM-FIVE.md)** first.
 
@@ -61,7 +62,7 @@ DirectInput forwarding still uses the real DLL from Windows System32 if the game
 2. Back up any existing `dinput8.dll` in the WWE 2K26 game folder.
 3. Download the newest release ZIP and verify its published SHA-256 checksum.
 4. Copy `dinput8.dll` into the game folder beside `WWE2K26_x64.exe`.
-5. Copy the `plugins` folder into the game folder (beside `dinput8.dll`).
+5. Copy only the clearly named approved addon files you want into `plugins` beside `dinput8.dll`.
 6. Put mod archives directly in `<game>/mods` and custom packages directly in `<game>/sound`.
 7. Launch the game offline and verify the intended content in-game.
 
@@ -76,9 +77,9 @@ The count means the game’s internal mount call accepted those archives. It doe
 
 ## Optional mount order
 
-Without a manifest, CAKs are mounted in case-insensitive filename order and
-custom packages are discovered as `sound/Custom*.pck`. To choose an explicit
-order, create `mods/manifest.json`:
+Addon enable/disable and initialization order are controlled separately by
+`plugins/addons.txt`. Within the CAK and Custom Music features, content order is
+controlled by `mods/manifest.json`:
 
 ```json
 {

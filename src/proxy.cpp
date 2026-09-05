@@ -9,6 +9,8 @@
 #include "shared/logging.hpp"
 #include "shared/plugin_interface.hpp"
 #include "shared/runtime_config.hpp"
+#include "core/addon_registry.hpp"
+#include "core/addon_selection.hpp"
 #include "core/profiles.hpp"
 
 #include <array>
@@ -98,22 +100,59 @@ void load_plugins(HMODULE game_module, const std::filesystem::path& game_dir) {
     };
 
     for (const auto& entry : std::filesystem::directory_iterator(plugins_dir)) {
-        if (entry.path().extension() == L".ftrib") {
-            HMODULE plugin = LoadLibraryW(entry.path().c_str());
-            if (plugin) {
-                auto init = reinterpret_cast<secure_dcl::PluginInitFn>(GetProcAddress(plugin, "PluginInit"));
-                if (init) {
-                    if (init(context)) {
-                        log_line("Loaded plugin: " + entry.path().filename().string());
-                    } else {
-                        log_line("Plugin initialization failed: " + entry.path().filename().string());
-                    }
-                } else {
-                    log_line("Plugin missing PluginInit export: " + entry.path().filename().string());
-                }
-            } else {
-                log_line("Failed to load plugin: " + entry.path().filename().string() + " Error: " + std::to_string(GetLastError()));
-            }
+        if (!entry.is_regular_file() || entry.is_symlink() || entry.path().extension() != L".ftrib")
+            continue;
+        const auto filename = entry.path().filename().string();
+        if (!secure_dcl::approved_addon_for_filename(filename)) {
+            log_line("REJECTED addon " + filename + ": filename is not in this loader's approved addon registry");
+        }
+    }
+
+    const auto selection = secure_dcl::load_addon_selection(plugins_dir);
+    if (!selection.valid) {
+        log_line("REJECTED all addons: " + selection.error);
+        return;
+    }
+    std::vector<const secure_dcl::ApprovedAddon *> enabled;
+    if (selection.present) {
+        for (const auto &filename : selection.filenames)
+            enabled.push_back(secure_dcl::approved_addon_for_filename(filename));
+    } else {
+        for (const auto &addon : secure_dcl::kApprovedAddons) enabled.push_back(&addon);
+    }
+
+    for (const auto *approved : enabled) {
+        if (!approved) continue;
+        const auto &addon = *approved;
+        const auto addon_path = plugins_dir / std::filesystem::path(std::string(addon.filename));
+        const DWORD attributes = GetFileAttributesW(addon_path.c_str());
+        if (attributes == INVALID_FILE_ATTRIBUTES) continue;
+        if ((attributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) != 0) {
+            log_line("REJECTED addon " + std::string(addon.filename) + ": not a regular non-reparse file");
+            continue;
+        }
+        const auto actual_hash = sha256_hex(addon_path);
+        if (actual_hash != addon.sha256) {
+            log_line("REJECTED addon " + std::string(addon.filename) + ": SHA-256 does not match the approved " + std::string(addon.product) + " build");
+            continue;
+        }
+        HMODULE plugin = LoadLibraryW(addon_path.c_str());
+        if (!plugin) {
+            log_line("FAILED addon " + std::string(addon.filename) + ": LoadLibraryW error " + std::to_string(GetLastError()));
+            continue;
+        }
+        const auto init = reinterpret_cast<secure_dcl::PluginInitFn>(
+            GetProcAddress(plugin, "PluginInit"));
+        if (!init) {
+            log_line("REJECTED addon " + std::string(addon.filename) + ": PluginInit export is missing");
+            FreeLibrary(plugin);
+            continue;
+        }
+        if (init(context)) {
+            log_line("Loaded approved addon: " + std::string(addon.product) + " [" + std::string(addon.filename) + "]");
+        } else {
+            log_line("FAILED addon " + std::string(addon.filename) + ": initialization returned false");
+            FreeLibrary(plugin);
         }
     }
 }

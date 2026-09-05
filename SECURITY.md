@@ -1,9 +1,6 @@
-# Security design
+**Readability note:** I ran this document through an “explain like I am five” chatbot to improve readability, explainability, and usability. The chatbot helped present the material; it did not originate Aurora Forge, DataCtrlLink, their functionality, or the underlying development work.
 
-> **Readability note:** I ran this document through an “explain like I am five”
-> chatbot to improve readability, explainability, and usability. The chatbot
-> helped present the material; it did not originate DataCtrlLink, its
-> functionality, or the underlying development work.
+# Security design
 
 ## What was removed
 
@@ -14,20 +11,22 @@ general plugin loader also enumerated compatible `.dlp` and `.asi` files as
 native code. That made file placement equivalent to granting code execution
 inside the game process.
 
-The secure replacement preserves the intended custom-music function, removes
-the general native-code loading surface, and adds narrowly scoped CAK mounting
-requested during the redesign. This is an audit-driven redesign of a working
-human-created addon, not an AI-originated addon concept.
+The secure replacement separates the intended features into individually named
+addons and restricts execution to exact filenames and reproducible SHA-256
+values compiled into each loader release. This is an audit-driven redesign of
+a working human-created addon, not an AI-originated addon concept.
 It is also not a rewrite of Tribute, PWM, or CakeHook source: no source code
 from those projects was available or copied.
 
-The rebuilt addon performs only two fixed operations: validated custom-music loading and validated `.cak` mounting.
+The core loader forwards DirectInput, verifies the game build, and starts only explicitly approved addons. CAK mounting and custom music are separate projects.
 
 ## Defensive controls
 
 - **Exact host allowlist:** mod behavior runs only in `WWE2K26_x64.exe` with the supported SHA-256.
 - **Absolute DirectInput forwarding:** the real `dinput8.dll` is loaded from Windows System32 rather than the game directory or search path.
 - **No arbitrary native extensions:** `.dlp`, `.asi`, and unrelated DLL files are never enumerated or executed.
+- **Pinned native addons:** unknown or modified `.ftrib` files are rejected; a user-editable file cannot approve new native code.
+- **User addon control:** optional `plugins/addons.txt` enables, disables, and orders only already-approved addons; malformed selections disable all addons for that run.
 - **CAK structural validation:** the encrypted catalog header is decoded and checked for the expected `FDIR` magic/version, bounded counts, consistent table sizes, contiguous table offsets, and archive bounds.
 - **Restricted CAK discovery:** only regular, non-reparse `.cak` files directly inside `<game>\mods` are considered; at most 32 archives are processed.
 - **Restricted package discovery:** only regular, non-reparse `sound\Custom*.pck` files are considered; at most 16 packages are processed and each must pass AKPK table validation.

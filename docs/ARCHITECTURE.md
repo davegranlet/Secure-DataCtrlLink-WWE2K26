@@ -1,9 +1,6 @@
-# Architecture and important code map
+**Readability note:** I ran this document through an “explain like I am five” chatbot to improve readability, explainability, and usability. The chatbot helped present the material; it did not originate Aurora Forge, DataCtrlLink, their functionality, or the underlying development work.
 
-> **Readability note:** I ran this document through an “explain like I am five”
-> chatbot to improve readability, explainability, and usability. The chatbot
-> helped present the material; it did not originate DataCtrlLink, its
-> functionality, or the underlying development work.
+# Architecture and important code map
 
 This is the shortest route through the source for reviewers and maintainers.
 
@@ -14,11 +11,10 @@ Windows loads dinput8.dll
   → DllMain stores the module handle and starts one worker
   → DirectInput exports resolve the absolute System32 DLL on first use
   → worker verifies host name + complete executable SHA-256
-  → worker validates CAK and Custom*.pck inputs
-  → one-shot, signature-checked archive-phase hook fires
-  → hook returns immediately; worker mounts accepted CAKs
-  → worker registers audio packages and loads rebuilt music bank
-  → status notification and detailed log
+  → loader reads the optional bounded plugins/addons.txt selection
+  → loader checks exact addon filename + compiled SHA-256
+  → only approved addons receive the reviewed game-build profile
+  → each addon validates its own data and records detailed status
 ```
 
 ## Important source files
@@ -27,15 +23,21 @@ Windows loads dinput8.dll
 
 The security boundary and orchestration layer.
 
-- `supported_game()` hashes the complete host and enforces the allowlist.
-- `custom_packages()` restricts package discovery to regular, non-reparse `Custom*.pck` files.
-- `mount_cak_archives()` checks code signatures, installs a one-shot MinHook detour, and invokes the native mount function only after the stock archive phase.
-- `register_packages()` uses the supported build’s Wwise resolver.
+- `sha256_hex()` hashes the complete host and every candidate approved addon.
+- `load_plugins()` rejects unknown names, altered hashes, reparse points, missing exports, and failed initialization.
 - `load_real()` resolves the genuine Microsoft DirectInput DLL from System32.
-- `music_worker_impl()` sequences all initialization outside `DllMain`.
+- `main_worker()` sequences verification and addon initialization outside `DllMain`.
 - the six exported functions at the bottom forward to System32.
 
 The RVAs, signatures, ordinals, and function-pointer ABIs are version-specific. Treat them as one reviewed compatibility profile; never update one in isolation.
+
+### `src/core/addon_registry.*`
+
+Defines the only native addon filenames and reproducible SHA-256 values accepted by this loader release.
+
+### `src/core/addon_selection.*`
+
+Parses the optional bounded `plugins/addons.txt` enable/order list. Unknown names, paths, duplicates, excessive lines, and reparse points fail closed.
 
 ### `src/cak_validator.cpp`
 

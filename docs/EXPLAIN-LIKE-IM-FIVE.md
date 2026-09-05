@@ -1,10 +1,6 @@
-# Explain Like I’m Five: how Secure DataCtrlLink works
+**Readability note:** I ran this document through an “explain like I am five” chatbot to improve readability, explainability, and usability. The chatbot helped present the material; it did not originate Aurora Forge, DataCtrlLink, their functionality, or the underlying development work.
 
-> **Readability note:** I ran this document through an “explain like I am five”
-> chatbot to improve readability, explainability, and usability. The chatbot
-> helped present the material; it did not originate DataCtrlLink, its
-> functionality, or the underlying development work. DataCtrlLink was already
-> working in-game before I asked AI to help audit and secure my own code.
+# Explain Like I’m Five: how Secure DataCtrlLink works
 
 Imagine WWE 2K26 is a big library.
 

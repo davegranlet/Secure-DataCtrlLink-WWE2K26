@@ -1,9 +1,6 @@
-# Development and provenance FAQ
+**Readability note:** I ran this document through an “explain like I am five” chatbot to improve readability, explainability, and usability. The chatbot helped present the material; it did not originate Aurora Forge, DataCtrlLink, their functionality, or the underlying development work.
 
-> **Readability note:** I ran this document through an “explain like I am five”
-> chatbot to improve readability, explainability, and usability. The chatbot
-> helped present the material; it did not originate DataCtrlLink, its
-> functionality, or the underlying development work.
+# Development and provenance FAQ
 
 This is the standing development statement for Secure DataCtrlLink. It applies
 to the current release and future releases unless the project's history or
